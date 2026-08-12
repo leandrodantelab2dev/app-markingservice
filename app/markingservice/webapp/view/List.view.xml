@@ -1,0 +1,92 @@
+<mvc:View
+	controllerName="markingservice.controller.List"
+	displayBlock="true"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	core:require="{
+		formatter: 'markingservice/model/formatter',
+		DateTimeOffset: 'sap/ui/model/odata/type/DateTimeOffset'
+	}">
+
+	<Page id="listPage" title="{i18n>listTitle}">
+		<content>
+			<Table
+				id="markingTable"
+				items="{
+					path: '/ServiceMarking',
+					parameters: {
+						$expand: 'lineSection,serviceType,condition,status'
+					},
+					sorter: { path: 'markingDate', descending: true }
+				}"
+				noDataText="{i18n>listEmptyText}"
+				growing="true"
+				growingScrollToLoad="true"
+				itemPress=".onMarkingPress">
+
+				<headerToolbar>
+					<OverflowToolbar>
+						<Title text="{i18n>listTitle}" level="H2"/>
+						<ToolbarSpacer/>
+						<Label text="{i18n>filterStatusPlaceholder}" labelFor="statusFilter"/>
+						<Select
+							id="statusFilter"
+							forceSelection="false"
+							autoAdjustWidth="true"
+							items="{/MarkingStatus}"
+							change=".onFilterChange">
+							<core:Item key="{code}" text="{name}"/>
+						</Select>
+						<Label text="{i18n>filterLineSectionPlaceholder}" labelFor="lineSectionFilter"/>
+						<Select
+							id="lineSectionFilter"
+							forceSelection="false"
+							autoAdjustWidth="true"
+							items="{/LineSection}"
+							change=".onFilterChange">
+							<core:Item key="{ID}" text="{code}"/>
+						</Select>
+						<Button text="{i18n>btnClearFilters}" press=".onClearFilters"/>
+						<Button text="{i18n>btnNewMarking}" type="Emphasized" press=".onNewMarking"/>
+					</OverflowToolbar>
+				</headerToolbar>
+
+				<columns>
+					<Column><Text text="{i18n>colLineSection}"/></Column>
+					<Column><Text text="{i18n>colKm}"/></Column>
+					<Column><Text text="{i18n>colServiceType}"/></Column>
+					<Column><Text text="{i18n>colCondition}"/></Column>
+					<Column><Text text="{i18n>colStatus}"/></Column>
+					<Column><Text text="{i18n>colDate}"/></Column>
+				</columns>
+
+				<items>
+					<ColumnListItem type="Navigation">
+						<cells>
+							<Text text="{lineSection/code}"/>
+							<Text text="{
+								parts: ['kmFrom', 'kmTo'],
+								formatter: 'formatter.kmRange'
+							}"/>
+							<Text text="{serviceType/name}"/>
+							<ObjectStatus
+								text="{condition/name}"
+								state="{
+									path: 'condition_code',
+									formatter: 'formatter.conditionState'
+								}"/>
+							<Text text="{status/name}"/>
+							<Text text="{
+								path: 'markingDate',
+								type: 'DateTimeOffset',
+								formatOptions: { style: 'medium' }
+							}"/>
+						</cells>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</content>
+	</Page>
+
+</mvc:View>

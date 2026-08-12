@@ -1,0 +1,191 @@
+<mvc:View
+	controllerName="markingservice.controller.Detail"
+	displayBlock="true"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:form="sap.ui.layout.form"
+	core:require="{
+		formatter: 'markingservice/model/formatter',
+		DateTimeOffset: 'sap/ui/model/odata/type/DateTimeOffset'
+	}">
+
+	<Page
+		id="detailPage"
+		title="{= ${vm>/creating} ? ${i18n>detailTitleNew} : ${i18n>detailTitleView} }"
+		showNavButton="true"
+		navButtonPress=".onNavBack">
+
+		<content>
+
+			<!-- View mode: existing marking, read-only, actions via bound actions only -->
+			<form:Form
+				id="viewForm"
+				visible="{= !${vm>/creating} }"
+				editable="false"
+				layout="ColumnLayout">
+				<form:layout>
+					<form:ColumnLayout columnsM="2" columnsL="3" columnsXL="4"/>
+				</form:layout>
+				<form:formContainers>
+					<form:FormContainer>
+						<form:formElements>
+							<form:FormElement label="{i18n>fieldLineSection}">
+								<form:fields><Text text="{lineSection/code}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldKmFrom}">
+								<form:fields><Text text="{kmFrom}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldKmTo}">
+								<form:fields><Text text="{kmTo}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldLatitude}">
+								<form:fields><Text text="{latitude}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldLongitude}">
+								<form:fields><Text text="{longitude}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldMarkingDate}">
+								<form:fields>
+									<Text text="{
+										path: 'markingDate',
+										type: 'DateTimeOffset',
+										formatOptions: { style: 'medium' }
+									}"/>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldInspector}">
+								<form:fields><Text text="{inspector}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldServiceType}">
+								<form:fields><Text text="{serviceType/name}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldCondition}">
+								<form:fields>
+									<ObjectStatus
+										text="{condition/name}"
+										state="{
+											path: 'condition_code',
+											formatter: 'formatter.conditionState'
+										}"/>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldStatus}">
+								<form:fields><Text text="{status/name}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldNotes}">
+								<form:fields><Text text="{notes}"/></form:fields>
+							</form:FormElement>
+						</form:formElements>
+					</form:FormContainer>
+				</form:formContainers>
+			</form:Form>
+
+			<Panel visible="{= !${vm>/creating} }" headerText="{i18n>sectionPhotos}">
+				<List items="{photos}" noDataText="{i18n>noPhotos}">
+					<StandardListItem
+						title="{fileName}"
+						description="{mediaType}"
+						icon="{url}"
+						iconDensityAware="false"/>
+				</List>
+			</Panel>
+
+			<!-- Create mode: new marking, editable form, saved via list binding create() -->
+			<form:Form
+				id="createForm"
+				visible="{vm>/creating}"
+				editable="true"
+				layout="ColumnLayout">
+				<form:layout>
+					<form:ColumnLayout columnsM="2" columnsL="3" columnsXL="4"/>
+				</form:layout>
+				<form:formContainers>
+					<form:FormContainer>
+						<form:formElements>
+							<form:FormElement label="{i18n>fieldLineSection}">
+								<form:fields>
+									<Select
+										id="newLineSection"
+										items="{/LineSection}"
+										selectedKey="{new>lineSection_ID}">
+										<core:Item key="{ID}" text="{code}"/>
+									</Select>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldKmFrom}">
+								<form:fields><Input type="Number" value="{new>kmFrom}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldKmTo}">
+								<form:fields><Input type="Number" value="{new>kmTo}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldLatitude}">
+								<form:fields><Input type="Number" value="{new>latitude}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldLongitude}">
+								<form:fields><Input type="Number" value="{new>longitude}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldMarkingDate}">
+								<form:fields><DateTimePicker id="newMarkingDate" value="{new>markingDate}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldInspector}">
+								<form:fields><Input value="{new>inspector}"/></form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldServiceType}">
+								<form:fields>
+									<Select
+										id="newServiceType"
+										items="{/ServiceType}"
+										selectedKey="{new>serviceType_code}">
+										<core:Item key="{code}" text="{name}"/>
+									</Select>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldCondition}">
+								<form:fields>
+									<Select
+										id="newCondition"
+										items="{/Condition}"
+										selectedKey="{new>condition_code}">
+										<core:Item key="{code}" text="{name}"/>
+									</Select>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="{i18n>fieldNotes}">
+								<form:fields><TextArea value="{new>notes}" rows="3"/></form:fields>
+							</form:FormElement>
+						</form:formElements>
+					</form:FormContainer>
+				</form:formContainers>
+			</form:Form>
+
+		</content>
+
+		<footer>
+			<Bar>
+				<contentRight>
+					<Button
+						text="{i18n>btnSendToPlanning}"
+						type="Emphasized"
+						visible="{= !${vm>/creating} && ${status_code} === 'MARKED' }"
+						press=".onSendToPlanning"/>
+					<Button
+						text="{i18n>btnReject}"
+						visible="{= !${vm>/creating} }"
+						press=".onReject"/>
+					<Button
+						text="{i18n>btnSave}"
+						type="Emphasized"
+						visible="{vm>/creating}"
+						press=".onSave"/>
+					<Button
+						text="{i18n>btnCancel}"
+						visible="{vm>/creating}"
+						press=".onCancelCreate"/>
+				</contentRight>
+			</Bar>
+		</footer>
+
+	</Page>
+
+</mvc:View>
