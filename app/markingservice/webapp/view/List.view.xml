@@ -10,7 +10,29 @@
 	}">
 
 	<Page id="listPage" title="{i18n>listTitle}">
+		<headerContent>
+			<Button icon="sap-icon://synchronize" tooltip="{i18n>btnSync}" press=".onSync"/>
+			<Button icon="sap-icon://add" text="{i18n>btnNewMarking}" type="Emphasized" press=".onNewMarking"/>
+		</headerContent>
 		<content>
+			<HBox id="kpiBar" justifyContent="Center" class="sapUiSmallMarginTop sapUiSmallMarginBottom">
+				<VBox alignItems="Center" class="sapUiMediumMarginBeginEnd">
+					<ObjectNumber id="kpiTotalNumber" number="{kpi>/total}" emphasized="false"/>
+					<Label text="{i18n>kpiTotal}"/>
+				</VBox>
+				<VBox alignItems="Center" class="sapUiMediumMarginBeginEnd">
+					<ObjectNumber id="kpiCriticalNumber" number="{kpi>/critical}" state="Error" emphasized="true"/>
+					<Label text="{i18n>kpiCritical}"/>
+				</VBox>
+				<VBox alignItems="Center" class="sapUiMediumMarginBeginEnd">
+					<ObjectNumber id="kpiAttentionNumber" number="{kpi>/attention}" state="Warning" emphasized="true"/>
+					<Label text="{i18n>kpiAttention}"/>
+				</VBox>
+				<VBox alignItems="Center" class="sapUiMediumMarginBeginEnd">
+					<ObjectNumber id="kpiOkNumber" number="{kpi>/ok}" state="Success" emphasized="true"/>
+					<Label text="{i18n>kpiOk}"/>
+				</VBox>
+			</HBox>
 			<Table
 				id="markingTable"
 				items="{
@@ -27,38 +49,42 @@
 
 				<headerToolbar>
 					<OverflowToolbar>
-						<Title text="{i18n>listTitle}" level="H2"/>
-						<ToolbarSpacer/>
-						<Label text="{i18n>filterStatusPlaceholder}" labelFor="statusFilter"/>
+						<Label text="{i18n>filterStatusLabel}" labelFor="statusFilter" class="sapUiTinyMarginEnd"/>
 						<Select
 							id="statusFilter"
 							forceSelection="false"
 							autoAdjustWidth="true"
+							tooltip="{i18n>filterStatusPlaceholder}"
 							items="{/MarkingStatus}"
 							change=".onFilterChange">
 							<core:Item key="{code}" text="{name}"/>
 						</Select>
-						<Label text="{i18n>filterLineSectionPlaceholder}" labelFor="lineSectionFilter"/>
+						<Label text="{i18n>filterLineSectionLabel}" labelFor="lineSectionFilter" class="sapUiSmallMarginBegin sapUiTinyMarginEnd"/>
 						<Select
 							id="lineSectionFilter"
 							forceSelection="false"
 							autoAdjustWidth="true"
+							tooltip="{i18n>filterLineSectionPlaceholder}"
 							items="{/LineSection}"
 							change=".onFilterChange">
 							<core:Item key="{ID}" text="{code}"/>
 						</Select>
-						<Button text="{i18n>btnClearFilters}" press=".onClearFilters"/>
-						<Button text="{i18n>btnNewMarking}" type="Emphasized" press=".onNewMarking"/>
+						<ToolbarSpacer/>
+						<Button icon="sap-icon://clear-filter" tooltip="{i18n>btnClearFilters}" press=".onClearFilters">
+							<layoutData>
+								<OverflowToolbarLayoutData priority="NeverOverflow"/>
+							</layoutData>
+						</Button>
 					</OverflowToolbar>
 				</headerToolbar>
 
 				<columns>
-					<Column><Text text="{i18n>colLineSection}"/></Column>
-					<Column><Text text="{i18n>colKm}"/></Column>
-					<Column><Text text="{i18n>colServiceType}"/></Column>
-					<Column><Text text="{i18n>colCondition}"/></Column>
-					<Column><Text text="{i18n>colStatus}"/></Column>
-					<Column><Text text="{i18n>colDate}"/></Column>
+					<Column importance="High"><Text text="{i18n>colLineSection}"/></Column>
+					<Column demandPopin="true" minScreenWidth="Tablet" importance="Low"><Text text="{i18n>colKm}"/></Column>
+					<Column demandPopin="true" minScreenWidth="Tablet" importance="Low"><Text text="{i18n>colServiceType}"/></Column>
+					<Column demandPopin="true" minScreenWidth="Tablet" importance="Medium"><Text text="{i18n>colCondition}"/></Column>
+					<Column importance="High"><Text text="{i18n>colStatus}"/></Column>
+					<Column demandPopin="true" minScreenWidth="Tablet" importance="Low"><Text text="{i18n>colDate}"/></Column>
 				</columns>
 
 				<items>

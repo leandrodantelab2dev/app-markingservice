@@ -22,8 +22,7 @@
 			<form:Form
 				id="viewForm"
 				visible="{= !${vm>/creating} }"
-				editable="false"
-				layout="ColumnLayout">
+				editable="false">
 				<form:layout>
 					<form:ColumnLayout columnsM="2" columnsL="3" columnsXL="4"/>
 				</form:layout>
@@ -95,8 +94,7 @@
 			<form:Form
 				id="createForm"
 				visible="{vm>/creating}"
-				editable="true"
-				layout="ColumnLayout">
+				editable="true">
 				<form:layout>
 					<form:ColumnLayout columnsM="2" columnsL="3" columnsXL="4"/>
 				</form:layout>
@@ -120,7 +118,10 @@
 								<form:fields><Input type="Number" value="{new>kmTo}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldLatitude}">
-								<form:fields><Input type="Number" value="{new>latitude}"/></form:fields>
+								<form:fields>
+									<Input type="Number" value="{new>latitude}"/>
+									<Button icon="sap-icon://map" tooltip="{i18n>btnUseGps}" press=".onUseGps"/>
+								</form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldLongitude}">
 								<form:fields><Input type="Number" value="{new>longitude}"/></form:fields>
@@ -159,6 +160,32 @@
 				</form:formContainers>
 			</form:Form>
 
+			<Panel visible="{vm>/creating}" headerText="{i18n>sectionLocation}">
+				<VBox class="sapUiSmallMargin">
+					<core:HTML content="{
+						parts: ['new>latitude', 'new>longitude'],
+						formatter: 'formatter.mapEmbedHtml'
+					}"/>
+				</VBox>
+			</Panel>
+
+			<Panel visible="{vm>/creating}" headerText="{i18n>sectionPhotos}">
+				<VBox class="sapUiSmallMargin">
+					<Button
+						icon="sap-icon://camera"
+						text="{i18n>btnTakePhoto}"
+						press=".onCapturePhoto"
+						class="sapUiSmallMarginBottom"/>
+					<List items="{new>photos}" mode="Delete" delete=".onRemovePhoto" noDataText="{i18n>noPhotos}">
+						<StandardListItem
+							title="{new>fileName}"
+							description="{new>mediaType}"
+							icon="{new>url}"
+							iconDensityAware="false"/>
+					</List>
+				</VBox>
+			</Panel>
+
 		</content>
 
 		<footer>
@@ -167,7 +194,7 @@
 					<Button
 						text="{i18n>btnSendToPlanning}"
 						type="Emphasized"
-						visible="{= !${vm>/creating} && ${status_code} === 'MARKED' }"
+						visible="{= !${vm>/creating} &amp;&amp; ${status_code} === 'MARKED' }"
 						press=".onSendToPlanning"/>
 					<Button
 						text="{i18n>btnReject}"

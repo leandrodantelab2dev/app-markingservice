@@ -3,19 +3,32 @@ sap.ui.define([
 	"sap/ui/model/json/JSONModel",
 	"sap/m/MessageToast",
 	"sap/m/MessageBox",
+	"sap/m/Dialog",
+	"sap/m/Button",
+	"sap/ui/core/HTML",
 	"sap/ui/core/Fragment"
-], function (BaseController, JSONModel, MessageToast, MessageBox, Fragment) {
+], function (BaseController, JSONModel, MessageToast, MessageBox, Dialog, Button, HTML, Fragment) {
 	"use strict";
 
 	const ENTITY_PATH = "/ServiceMarking";
 	const EXPAND = "lineSection,serviceType,condition,status,photos";
+	const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 	return BaseController.extend("markingservice.controller.Detail", {
 
 		onInit: function () {
 			this.setModel(new JSONModel({ creating: false }), "vm");
+			// getResourceBundle() may return a Promise while the i18n model is still loading
+			// asynchronously; resolve it once and cache it so message handlers never depend on timing.
+			Promise.resolve(this.getResourceBundle()).then((oBundle) => {
+				this._oBundle = oBundle;
+			});
 			this.getRouter().getRoute("detail").attachPatternMatched(this._onDetailMatched, this);
 			this.getRouter().getRoute("create").attachPatternMatched(this._onCreateMatched, this);
+		},
+
+		_text: function (sKey, aArgs) {
+			return this._oBundle ? this._oBundle.getText(sKey, aArgs) : sKey;
 		},
 
 		_onDetailMatched: function (oEvent) {
@@ -23,7 +36,12 @@ sap.ui.define([
 			this.getModel("vm").setProperty("/creating", false);
 			this.getView().bindElement({
 				path: ENTITY_PATH + "('" + sObjectId + "')",
-				parameters: { $expand: EXPAND }
+				parameters: {
+					$expand: EXPAND,
+					// status_code/condition_code are only read inside binding expressions (visible/state),
+					// never a plain control property, so autoExpandSelect can miss them without this.
+					$select: "status_code,condition_code"
+				}
 			});
 		},
 
@@ -40,8 +58,150 @@ sap.ui.define([
 				inspector: "",
 				serviceType_code: "",
 				condition_code: "",
-				notes: ""
+				notes: "",
+				photos: []
 			}), "new");
+		},
+
+		// ponytail: JSONModel list bindings only refresh when the array reference changes,
+		// so photo add/remove must replace the array instead of mutating it in place.
+		_setPhotos: function (aPhotos) {
+			this.getModel("new").setProperty("/photos", aPhotos);
+		},
+
+		onUseGps: function () {
+			if (!navigator.geolocation) {
+				MessageBox.error(this._text("msgGpsUnsupported"));
+				return;
+			}
+			navigator.geolocation.getCurrentPosition(
+				(oPosition) => {
+					this.getModel("new").setProperty("/latitude", oPosition.coords.latitude);
+					this.getModel("new").setProperty("/longitude", oPosition.coords.longitude);
+				},
+				(oError) => MessageBox.error(this._text("msgGpsError", [oError.message])),
+				// timeout needed: without it a stalled location fix hangs forever with no
+				// success/error callback, silently leaving the fields empty.
+				{ timeout: 10000, maximumAge: 60000 }
+			);
+		},
+
+		onCapturePhoto: function () {
+			if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+				this._openCameraDialog();
+			} else {
+				this._openFilePicker();
+			}
+		},
+
+		// ponytail: live getUserMedia preview so the button actually opens the camera instead of
+		// a generic file picker; photos are kept as data URLs for preview only, nothing is saved yet.
+		_openCameraDialog: function () {
+			navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+				.then((oStream) => {
+					this._oCameraStream = oStream;
+
+					const oVideoHtml = new HTML({
+						content: '<video autoplay playsinline muted style="width:100%;max-height:60vh;background:#000;display:block"></video>'
+					});
+					oVideoHtml.attachEventOnce("afterRendering", () => {
+						const oVideoEl = oVideoHtml.getDomRef();
+						if (oVideoEl) {
+							oVideoEl.srcObject = oStream;
+						}
+					});
+
+					const oDialog = new Dialog({
+						title: this._text("btnTakePhoto"),
+						contentWidth: "420px",
+						content: [oVideoHtml],
+						beginButton: new Button({
+							text: this._text("btnCapturePhoto"),
+							type: "Emphasized",
+							press: () => this._captureFrame(oVideoHtml.getDomRef())
+						}),
+						endButton: new Button({
+							text: this._text("btnCloseCamera"),
+							press: () => oDialog.close()
+						}),
+						afterClose: () => {
+							this._stopCameraStream();
+							oDialog.destroy();
+						}
+					});
+					this.getView().addDependent(oDialog);
+					oDialog.open();
+				})
+				.catch((oError) => MessageBox.error(this._text("msgCameraError", [oError.message])));
+		},
+
+		_captureFrame: function (oVideoEl) {
+			if (!oVideoEl || !oVideoEl.videoWidth) {
+				return;
+			}
+			const oCanvas = document.createElement("canvas");
+			oCanvas.width = oVideoEl.videoWidth;
+			oCanvas.height = oVideoEl.videoHeight;
+			oCanvas.getContext("2d").drawImage(oVideoEl, 0, 0);
+
+			const aPhotos = this.getModel("new").getProperty("/photos").concat([{
+				fileName: "foto-" + Date.now() + ".jpg",
+				mediaType: "image/jpeg",
+				url: oCanvas.toDataURL("image/jpeg", 0.85)
+			}]);
+			this._setPhotos(aPhotos);
+			MessageToast.show(this._text("msgPhotoCaptured"));
+		},
+
+		_stopCameraStream: function () {
+			if (this._oCameraStream) {
+				this._oCameraStream.getTracks().forEach((oTrack) => oTrack.stop());
+				this._oCameraStream = null;
+			}
+		},
+
+		// ponytail: fallback for browsers without getUserMedia (e.g. old Safari); still opens the
+		// device camera via the capture hint where supported, otherwise a plain file picker.
+		_openFilePicker: function () {
+			const oInput = document.createElement("input");
+			oInput.type = "file";
+			oInput.accept = "image/*";
+			oInput.capture = "environment";
+			oInput.multiple = true;
+			oInput.style.display = "none";
+			oInput.addEventListener("change", () => {
+				this._addPhotos(oInput.files);
+				document.body.removeChild(oInput);
+			});
+			document.body.appendChild(oInput);
+			oInput.click();
+		},
+
+		_addPhotos: function (oFileList) {
+			Array.from(oFileList).forEach((oFile) => {
+				if (!oFile.type.startsWith("image/")) {
+					MessageBox.error(this._text("msgPhotoInvalidType"));
+					return;
+				}
+				if (oFile.size > MAX_PHOTO_SIZE) {
+					MessageBox.error(this._text("msgPhotoTooLarge"));
+					return;
+				}
+				const oReader = new FileReader();
+				oReader.onload = () => {
+					const aPhotos = this.getModel("new").getProperty("/photos")
+						.concat([{ fileName: oFile.name, mediaType: oFile.type, url: oReader.result }]);
+					this._setPhotos(aPhotos);
+				};
+				oReader.readAsDataURL(oFile);
+			});
+		},
+
+		onRemovePhoto: function (oEvent) {
+			const sPath = oEvent.getParameter("listItem").getBindingContext("new").getPath();
+			const iIndex = Number(sPath.split("/").pop());
+			const aPhotos = this.getModel("new").getProperty("/photos").filter((oPhoto, i) => i !== iIndex);
+			this._setPhotos(aPhotos);
 		},
 
 		onSave: function () {
@@ -51,11 +211,11 @@ sap.ui.define([
 				oDraft.latitude !== "" && oDraft.longitude !== "";
 
 			if (!bValid) {
-				MessageBox.error(this.getResourceBundle().getText("msgValidationRequired"));
+				MessageBox.error(this._text("msgValidationRequired"));
 				return;
 			}
 			if (Number(oDraft.kmFrom) > Number(oDraft.kmTo)) {
-				MessageBox.error(this.getResourceBundle().getText("msgValidationKmOrder"));
+				MessageBox.error(this._text("msgValidationKmOrder"));
 				return;
 			}
 
@@ -77,11 +237,11 @@ sap.ui.define([
 
 			oNewContext.created()
 				.then(() => {
-					MessageToast.show(this.getResourceBundle().getText("msgCreateSuccess"));
+					MessageToast.show(this._text("msgCreateSuccess"));
 					this.getRouter().navTo("detail", { objectId: oNewContext.getProperty("ID") }, true);
 				})
 				.catch((oError) => {
-					MessageBox.error(this.getResourceBundle().getText("msgCreateError", [oError.message]));
+					MessageBox.error(this._text("msgCreateError", [oError.message]));
 				});
 		},
 
@@ -96,10 +256,10 @@ sap.ui.define([
 			oActionBinding.invoke()
 				.then(() => {
 					oContext.refresh();
-					MessageToast.show(this.getResourceBundle().getText("msgSendToPlanningSuccess"));
+					MessageToast.show(this._text("msgSendToPlanningSuccess"));
 				})
 				.catch((oError) => {
-					MessageBox.error(this.getResourceBundle().getText("msgActionError", [oError.message]));
+					MessageBox.error(this._text("msgActionError", [oError.message]));
 				});
 		},
 
@@ -115,7 +275,7 @@ sap.ui.define([
 			const sReason = oTextArea.getValue().trim();
 
 			if (!sReason) {
-				MessageBox.error(this.getResourceBundle().getText("msgReasonRequired"));
+				MessageBox.error(this._text("msgReasonRequired"));
 				return;
 			}
 
@@ -126,11 +286,11 @@ sap.ui.define([
 			oActionBinding.invoke()
 				.then(() => {
 					oContext.refresh();
-					MessageToast.show(this.getResourceBundle().getText("msgRejectSuccess"));
+					MessageToast.show(this._text("msgRejectSuccess"));
 					this._closeRejectDialog();
 				})
 				.catch((oError) => {
-					MessageBox.error(this.getResourceBundle().getText("msgActionError", [oError.message]));
+					MessageBox.error(this._text("msgActionError", [oError.message]));
 				});
 		},
 
