@@ -1,0 +1,4 @@
+ID,code,description,line,subdivision,kmStart,kmEnd
+50cc6f01-2da6-4733-9961-c3f1e05296d8,L1-SUB1,Trecho km 0 a km 15 da Linha 1,Linha 1,SUB1,0.000,15.000
+9eb3599b-2b94-4264-a6bd-4acb11583f16,L1-SUB2,Trecho km 15 a km 32 da Linha 1,Linha 1,SUB2,15.000,32.500
+df7109e0-cc3d-4f10-b7d3-7e57621704bc,L2-SUB1,Trecho km 0 a km 20 da Linha 2,Linha 2,SUB1,0.000,20.000

@@ -23,10 +23,11 @@ entity ServiceMarking : cuid, managed {
   condition   : Association to Condition not null;
   status      : Association to MarkingStatus not null default 'MARKED';
   notes       : String(1000);
-  photos      : Composition of many Attachment;
+  photos      : Composition of many Attachment on photos.marking = $self;
 }
 
 entity Attachment : cuid {
+  marking   : Association to ServiceMarking;
   fileName  : String(255) not null;
   mediaType : String(100) not null;
   url       : String(500) not null;
