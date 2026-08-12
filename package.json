@@ -1,0 +1,36 @@
+{
+  "name": "mrs-marking",
+  "version": "1.0.0",
+  "description": "Backend CAP Node.js do fluxo de marcação georreferenciada da MRS",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^10",
+    "@cap-js/sqlite": "^3"
+  },
+  "devDependencies": {
+    "@cap-js/mcp-server": "^0.0.5"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "cds": {
+    "requires": {
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "fiscal1": {
+            "password": "fiscal1",
+            "roles": [ "Fiscal" ]
+          }
+        }
+      },
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      }
+    }
+  }
+}

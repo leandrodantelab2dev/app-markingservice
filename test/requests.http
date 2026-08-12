@@ -1,0 +1,83 @@
+### Variáveis
+@host = http://localhost:4004
+@auth = Basic ZmlzY2FsMTpmaXNjYWwx
+@lineSectionId = 50cc6f01-2da6-4733-9961-c3f1e05296d8
+@markingIdMarked1 = 39b94f99-c0ca-476f-99dd-dee9ee13182e
+@markingIdMarked2 = 14ba2a7b-c222-4192-b8ed-a481659faf25
+
+### 1. Listar trechos (LineSection)
+# Esperado: 200 OK, array com os 3 trechos do seed (L1-SUB1, L1-SUB2, L2-SUB1)
+GET {{host}}/odata/v4/marking/LineSection
+Authorization: {{auth}}
+
+### 2. Listar tipos de serviço (ServiceType, code list)
+# Esperado: 200 OK, array com os 5 tipos de serviço do seed
+GET {{host}}/odata/v4/marking/ServiceType
+Authorization: {{auth}}
+
+### 3. Listar condições (Condition, code list)
+# Esperado: 200 OK, array com OK, ATENCAO, CRITICO
+GET {{host}}/odata/v4/marking/Condition
+Authorization: {{auth}}
+
+### 4. Listar status de marcação (MarkingStatus, code list)
+# Esperado: 200 OK, array com MARKED, IN_PLANNING, ORDERED, CLOSED, REJECTED
+GET {{host}}/odata/v4/marking/MarkingStatus
+Authorization: {{auth}}
+
+### 5. Listar marcações com $expand de trecho, tipo, condição e status
+# Esperado: 200 OK, cada marcação vem com os dados expandidos (não só a chave)
+GET {{host}}/odata/v4/marking/ServiceMarking?$expand=lineSection,serviceType,condition,status
+Authorization: {{auth}}
+
+### 6. Criar marcação válida (km dentro do trecho L1-SUB1, kmStart=0, kmEnd=15)
+# Esperado: 201 Created, status inicial MARKED
+POST {{host}}/odata/v4/marking/ServiceMarking
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "lineSection_ID": "{{lineSectionId}}",
+  "kmFrom": 3.000,
+  "kmTo": 3.500,
+  "latitude": -22.9000,
+  "longitude": -43.1800,
+  "markingDate": "2026-08-12T09:00:00Z",
+  "inspector": "Fiscal Teste",
+  "serviceType_code": "TAMPING",
+  "condition_code": "OK"
+}
+
+### 7. Criar marcação inválida (km fora do intervalo do trecho L1-SUB1)
+# Esperado: 400 Bad Request, mensagem em pt-BR sobre km fora do trecho
+POST {{host}}/odata/v4/marking/ServiceMarking
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "lineSection_ID": "{{lineSectionId}}",
+  "kmFrom": 20.000,
+  "kmTo": 21.000,
+  "latitude": -22.9000,
+  "longitude": -43.1800,
+  "markingDate": "2026-08-12T09:00:00Z",
+  "inspector": "Fiscal Teste",
+  "serviceType_code": "TAMPING",
+  "condition_code": "OK"
+}
+
+### 8. Enviar marcação para planejamento (MARKED -> IN_PLANNING)
+# Esperado: 204 No Content, status da marcação passa para IN_PLANNING
+POST {{host}}/odata/v4/marking/ServiceMarking({{markingIdMarked1}})/MarkingService.sendToPlanning
+Authorization: {{auth}}
+Content-Type: application/json
+
+### 9. Rejeitar marcação com motivo (MARKED -> REJECTED)
+# Esperado: 204 No Content, status da marcação passa para REJECTED e notes recebe o motivo
+POST {{host}}/odata/v4/marking/ServiceMarking({{markingIdMarked2}})/MarkingService.reject
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "reason": "Marcação duplicada no mesmo ponto do trecho."
+}
