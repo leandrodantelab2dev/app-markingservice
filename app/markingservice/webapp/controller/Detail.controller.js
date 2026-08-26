@@ -206,12 +206,22 @@ sap.ui.define([
 
 		onSave: function () {
 			const oDraft = this.getModel("new").getData();
-			const bValid = oDraft.lineSection_ID && oDraft.serviceType_code && oDraft.condition_code &&
-				oDraft.inspector && oDraft.kmFrom !== "" && oDraft.kmTo !== "" &&
-				oDraft.latitude !== "" && oDraft.longitude !== "";
+			const aRequired = [
+				["lineSection_ID", "fieldLineSection"],
+				["kmFrom", "fieldKmFrom"],
+				["kmTo", "fieldKmTo"],
+				["latitude", "fieldLatitude"],
+				["longitude", "fieldLongitude"],
+				["inspector", "fieldInspector"],
+				["serviceType_code", "fieldServiceType"],
+				["condition_code", "fieldCondition"]
+			];
+			const aMissing = aRequired
+				.filter(([sProp]) => oDraft[sProp] === "" || oDraft[sProp] == null)
+				.map(([, sLabelKey]) => this._text(sLabelKey));
 
-			if (!bValid) {
-				MessageBox.error(this._text("msgValidationRequired"));
+			if (aMissing.length > 0) {
+				MessageBox.error(this._text("msgValidationRequired") + " (" + aMissing.join(", ") + ")");
 				return;
 			}
 			if (Number(oDraft.kmFrom) > Number(oDraft.kmTo)) {
