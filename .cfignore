@@ -1,0 +1,11 @@
+node_modules/
+app/markingservice/node_modules/
+gen/
+target/
+_out/
+.git/
+.vscode/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store

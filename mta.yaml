@@ -1,0 +1,40 @@
+_schema-version: 3.3.0
+ID: mrs-marking
+version: 1.0.0
+description: "Backend CAP Node.js do fluxo de marcação georreferenciada da MRS"
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+        # cds build nao empacota o app UI5 freestyle (sem html5-repo), entao
+        # copiamos os estaticos pra dentro do modulo gerado.
+        - mkdir -p gen/srv/app/markingservice
+        - cp -R app/markingservice/webapp gen/srv/app/markingservice/webapp
+        # sqlite in-memory tambem nao ganha os seeds CSV do build de producao
+        # (isso so roda pra tasks de db tipo hana). Copiamos na mao.
+        - mkdir -p gen/srv/db
+        - cp -R db/data gen/srv/db/data
+modules:
+  # Deploy simples: um unico modulo nodejs. Sqlite in-memory e auth mockada,
+  # ver package.json e CLAUDE.md secao 8.
+  - name: mrs-marking-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+resources:
+  []

@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@cap-js/mcp-server": "^0.0.5",
+    "@sap/cds-dk": "^10",
     "cds-plugin-ui5": "^0.17.4"
   },
   "scripts": {
@@ -33,6 +34,19 @@
         "credentials": {
           "url": "db.sqlite"
         }
+      }
+    },
+    "[production]": {
+      "requires": {
+        "db": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": ":memory:"
+          }
+        }
+      },
+      "features": {
+        "in_memory_db": true
       }
     }
   }

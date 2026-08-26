@@ -1,0 +1,14 @@
+# Deploy simples: um unico app CF, sqlite in-memory, auth mockada.
+# Sem MTA, sem HANA, sem XSUAA (ver CLAUDE.md secao 8).
+---
+applications:
+- name: mrs-marking-srv
+  random-route: true
+  path: .
+  memory: 256M
+  disk_quota: 512M
+  buildpack: nodejs_buildpack
+  command: npm start
+  env:
+    NODE_ENV: production
+

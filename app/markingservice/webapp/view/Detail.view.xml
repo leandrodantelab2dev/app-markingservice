@@ -106,38 +106,38 @@
 									<Select
 										id="newLineSection"
 										items="{/LineSection}"
-										selectedKey="{new>lineSection_ID}">
+										selectedKey="{new>/lineSection_ID}">
 										<core:Item key="{ID}" text="{code}"/>
 									</Select>
 								</form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldKmFrom}">
-								<form:fields><Input type="Number" value="{new>kmFrom}"/></form:fields>
+								<form:fields><Input value="{new>/kmFrom}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldKmTo}">
-								<form:fields><Input type="Number" value="{new>kmTo}"/></form:fields>
+								<form:fields><Input value="{new>/kmTo}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldLatitude}">
 								<form:fields>
-									<Input type="Number" value="{new>latitude}"/>
+									<Input value="{new>/latitude}"/>
 									<Button icon="sap-icon://map" tooltip="{i18n>btnUseGps}" press=".onUseGps"/>
 								</form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldLongitude}">
-								<form:fields><Input type="Number" value="{new>longitude}"/></form:fields>
+								<form:fields><Input value="{new>/longitude}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldMarkingDate}">
-								<form:fields><DateTimePicker id="newMarkingDate" value="{new>markingDate}"/></form:fields>
+								<form:fields><DateTimePicker id="newMarkingDate" value="{new>/markingDate}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldInspector}">
-								<form:fields><Input value="{new>inspector}"/></form:fields>
+								<form:fields><Input value="{new>/inspector}"/></form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldServiceType}">
 								<form:fields>
 									<Select
 										id="newServiceType"
 										items="{/ServiceType}"
-										selectedKey="{new>serviceType_code}">
+										selectedKey="{new>/serviceType_code}">
 										<core:Item key="{code}" text="{name}"/>
 									</Select>
 								</form:fields>
@@ -147,13 +147,13 @@
 									<Select
 										id="newCondition"
 										items="{/Condition}"
-										selectedKey="{new>condition_code}">
+										selectedKey="{new>/condition_code}">
 										<core:Item key="{code}" text="{name}"/>
 									</Select>
 								</form:fields>
 							</form:FormElement>
 							<form:FormElement label="{i18n>fieldNotes}">
-								<form:fields><TextArea value="{new>notes}" rows="3"/></form:fields>
+								<form:fields><TextArea value="{new>/notes}" rows="3"/></form:fields>
 							</form:FormElement>
 						</form:formElements>
 					</form:FormContainer>
@@ -163,7 +163,7 @@
 			<Panel visible="{vm>/creating}" headerText="{i18n>sectionLocation}">
 				<VBox class="sapUiSmallMargin">
 					<core:HTML content="{
-						parts: ['new>latitude', 'new>longitude'],
+						parts: ['new>/latitude', 'new>/longitude'],
 						formatter: 'formatter.mapEmbedHtml'
 					}"/>
 				</VBox>
@@ -176,7 +176,7 @@
 						text="{i18n>btnTakePhoto}"
 						press=".onCapturePhoto"
 						class="sapUiSmallMarginBottom"/>
-					<List items="{new>photos}" mode="Delete" delete=".onRemovePhoto" noDataText="{i18n>noPhotos}">
+					<List items="{new>/photos}" mode="Delete" delete=".onRemovePhoto" noDataText="{i18n>noPhotos}">
 						<StandardListItem
 							title="{new>fileName}"
 							description="{new>mediaType}"

@@ -223,9 +223,10 @@ sap.ui.define([
 				lineSection_ID: oDraft.lineSection_ID,
 				kmFrom: Number(oDraft.kmFrom),
 				kmTo: Number(oDraft.kmTo),
-				latitude: Number(oDraft.latitude),
-				longitude: Number(oDraft.longitude),
-				markingDate: oDraft.markingDate.toISOString(),
+				// field is Decimal(9,6); GPS/manual input can carry more decimal digits than that
+				latitude: Number(Number(oDraft.latitude).toFixed(6)),
+				longitude: Number(Number(oDraft.longitude).toFixed(6)),
+				markingDate: new Date(oDraft.markingDate).toISOString(),
 				inspector: oDraft.inspector,
 				serviceType_code: oDraft.serviceType_code,
 				condition_code: oDraft.condition_code,
